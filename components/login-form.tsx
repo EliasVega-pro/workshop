@@ -1,0 +1,121 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { User, Lock, GraduationCap } from "lucide-react"
+import { useAuth } from "./auth-context"
+import { SignupForm } from "./signup-form" // Import SignupForm component
+
+export function LoginForm() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [showSignup, setShowSignup] = useState(false)
+  const { login, isLoading } = useAuth()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    console.log("[v0] Login form submitted with email:", email)
+
+    if (!email || !password) {
+      setError("Por favor ingrese email y contraseña")
+      return
+    }
+
+    const success = await login(email, password)
+    console.log("[v0] Login result:", success)
+    if (!success) {
+      setError("Email o contraseña incorrectos. Verifique sus credenciales.")
+    }
+  }
+
+  if (showSignup) {
+    return <SignupForm onBack={() => setShowSignup(false)} />
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+            <GraduationCap className="w-8 h-8 text-primary-foreground" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-primary">Sistema de Reservas</CardTitle>
+          <p className="text-muted-foreground">Taller de Ingeniería</p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="profesor@universidad.edu"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-input"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                Contraseña
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Ingrese su contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-input"
+                disabled={isLoading}
+              />
+            </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full bg-transparent"
+                onClick={() => setShowSignup(true)}
+              >
+                Crear Nueva Cuenta
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-6 p-4 bg-muted rounded-lg">
+            <p className="text-sm font-medium mb-2">Usuarios de prueba:</p>
+            <div className="text-xs space-y-1 text-muted-foreground">
+              <p>• admin@universidad.edu / Admin123!</p>
+              <p>• profesor1@universidad.edu / Profesor123!</p>
+              <p>O cree una nueva cuenta usando el botón de arriba.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
