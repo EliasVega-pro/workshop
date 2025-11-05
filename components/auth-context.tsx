@@ -13,7 +13,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (password: string, email?: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
@@ -75,27 +75,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (passwordOrEmail: string, passwordParam?: string): Promise<boolean> => {
     setIsLoading(true)
-    console.log("[v0] Attempting login with email:", email)
+    const isAdminLogin = passwordParam === undefined
+    const adminPassword = "Admin123!@"
+    const adminEmail = "admin@taller.edu"
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      if (isAdminLogin) {
+        console.log("[v0] Attempting admin login with password only")
+        if (passwordOrEmail === adminPassword) {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: adminEmail,
+            password: adminPassword,
+          })
 
-      console.log("[v0] Login response data:", data)
-      console.log("[v0] Login response error:", error)
+          if (error) {
+            console.error("[v0] Admin login error:", error.message)
+            setIsLoading(false)
+            return false
+          }
 
-      if (error) {
-        console.error("[v0] Login error details:", error.message, error.status)
-        setIsLoading(false)
-        return false
+          console.log("[v0] Admin login successful")
+          return true
+        } else {
+          console.error("[v0] Invalid admin password")
+          setIsLoading(false)
+          return false
+        }
+      } else {
+        console.log("[v0] Attempting professor login with email:", passwordOrEmail)
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: passwordOrEmail,
+          password: passwordParam!,
+        })
+
+        if (error) {
+          console.error("[v0] Professor login error:", error.message)
+          setIsLoading(false)
+          return false
+        }
+
+        console.log("[v0] Professor login successful, user:", data.user?.email)
+        return true
       }
-
-      console.log("[v0] Login successful, user:", data.user?.email)
-      return true
     } catch (error) {
       console.error("[v0] Login exception:", error)
       setIsLoading(false)
