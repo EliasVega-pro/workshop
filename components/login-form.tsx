@@ -157,7 +157,7 @@ export function LoginForm() {
             <p className="text-sm font-medium mb-2">Usuarios de prueba:</p>
             <div className="text-xs space-y-1 text-muted-foreground">
               <p className="font-medium">Admin: Solo contraseña</p>
-              <p>• Contraseña: Admin123!@</p>
+              <p>• Contraseña: navojoa2026</p>
               <p className="font-medium mt-2">Profesores:</p>
               <p>• profesor1@universidad.edu / Profesor123!</p>
               <p>O cree una nueva cuenta usando el botón de arriba.</p>
