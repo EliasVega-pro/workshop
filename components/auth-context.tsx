@@ -78,12 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (passwordOrEmail: string, passwordParam?: string): Promise<boolean> => {
     setIsLoading(true)
     const isAdminLogin = passwordParam === undefined
-    const adminPassword = "navojoa2026" // Actualizar contraseña del administrador a navojoa2026
+    const adminPassword = "navojoa2026"
     const adminEmail = "admin@taller.edu"
 
     try {
       if (isAdminLogin) {
-        console.log("[v0] Attempting admin login with password only")
         if (passwordOrEmail === adminPassword) {
           const { data, error } = await supabase.auth.signInWithPassword({
             email: adminEmail,
@@ -91,36 +90,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
 
           if (error) {
-            console.error("[v0] Admin login error:", error.message)
             setIsLoading(false)
             return false
           }
 
-          console.log("[v0] Admin login successful")
           return true
         } else {
-          console.error("[v0] Invalid admin password")
           setIsLoading(false)
           return false
         }
       } else {
-        console.log("[v0] Attempting professor login with email:", passwordOrEmail)
         const { data, error } = await supabase.auth.signInWithPassword({
           email: passwordOrEmail,
           password: passwordParam!,
         })
 
         if (error) {
-          console.error("[v0] Professor login error:", error.message)
           setIsLoading(false)
           return false
         }
 
-        console.log("[v0] Professor login successful, user:", data.user?.email)
         return true
       }
     } catch (error) {
-      console.error("[v0] Login exception:", error)
       setIsLoading(false)
       return false
     }
