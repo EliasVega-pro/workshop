@@ -23,44 +23,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session?.user) {
-        await loadUserProfile(session.user)
+    let isMounted = true
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (isMounted) {
+          if (session?.user) {
+            await loadUserProfile(session.user)
+          }
+          setIsLoading(false)
+          setInitialized(true)
+        }
+      } catch (error) {
+        if (isMounted) {
+          setIsLoading(false)
+          setInitialized(true)
+        }
       }
-      setIsLoading(false)
     }
 
-    getSession()
+    initializeAuth()
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await loadUserProfile(session.user)
-      } else {
-        setUser(null)
+      if (isMounted) {
+        if (session?.user) {
+          await loadUserProfile(session.user)
+        } else {
+          setUser(null)
+        }
       }
-      setIsLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription?.unsubscribe()
+    }
   }, [])
 
   const loadUserProfile = async (authUser: SupabaseUser) => {
     try {
-      const { data: profile, error } = await supabase.from("users").select("*").eq("email", authUser.email).single()
-
-      if (error) {
-        console.error("Error loading user profile:", error)
-        return
-      }
+      const { data: profile } = await supabase.from("users").select("*").eq("email", authUser.email).single()
 
       if (profile) {
         setUser({
@@ -71,12 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
       }
     } catch (error) {
-      console.error("Error in loadUserProfile:", error)
+      // Error silencioso
     }
   }
 
   const login = async (passwordOrEmail: string, passwordParam?: string): Promise<boolean> => {
-    setIsLoading(true)
     const isAdminLogin = passwordParam === undefined
     const adminPassword = "navojoa2026"
     const adminEmail = "admin@taller.edu"
@@ -84,36 +95,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (isAdminLogin) {
         if (passwordOrEmail === adminPassword) {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { error } = await supabase.auth.signInWithPassword({
             email: adminEmail,
             password: adminPassword,
           })
-
-          if (error) {
-            setIsLoading(false)
-            return false
-          }
-
-          return true
-        } else {
-          setIsLoading(false)
-          return false
+          return !error
         }
+        return false
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email: passwordOrEmail,
           password: passwordParam!,
         })
-
-        if (error) {
-          setIsLoading(false)
-          return false
-        }
-
-        return true
+        return !error
       }
-    } catch (error) {
-      setIsLoading(false)
+    } catch {
       return false
     }
   }

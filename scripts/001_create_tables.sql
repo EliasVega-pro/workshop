@@ -53,34 +53,41 @@ ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservation_materials ENABLE ROW LEVEL SECURITY;
 
--- Políticas para usuarios
+-- Eliminar políticas anteriores si existen
+DROP POLICY IF EXISTS "Users can view all users" ON public.users;
+DROP POLICY IF EXISTS "Users can update their own data" ON public.users;
+DROP POLICY IF EXISTS "Anyone can view subjects" ON public.subjects;
+DROP POLICY IF EXISTS "Admins can manage subjects" ON public.subjects;
+DROP POLICY IF EXISTS "Users can view their own reservations" ON public.reservations;
+DROP POLICY IF EXISTS "Users can create their own reservations" ON public.reservations;
+DROP POLICY IF EXISTS "Users can update their own reservations" ON public.reservations;
+DROP POLICY IF EXISTS "Admins can view all reservations" ON public.reservations;
+DROP POLICY IF EXISTS "Anyone can view materials" ON public.materials;
+DROP POLICY IF EXISTS "Admins can manage materials" ON public.materials;
+DROP POLICY IF EXISTS "Users can manage materials for their reservations" ON public.reservation_materials;
+DROP POLICY IF EXISTS "Admins can view all reservation materials" ON public.reservation_materials;
+
+-- Políticas simples para usuarios
 CREATE POLICY "Users can view all users" ON public.users FOR SELECT USING (true);
 CREATE POLICY "Users can update their own data" ON public.users FOR UPDATE USING (id = auth.uid());
+CREATE POLICY "Anyone can insert users" ON public.users FOR INSERT WITH CHECK (true);
 
--- Políticas para materias (todos pueden ver)
+-- Políticas para materias
 CREATE POLICY "Anyone can view subjects" ON public.subjects FOR SELECT USING (true);
-CREATE POLICY "Admins can manage subjects" ON public.subjects FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Anyone can insert subjects" ON public.subjects FOR INSERT WITH CHECK (true);
 
 -- Políticas para reservaciones
 CREATE POLICY "Users can view their own reservations" ON public.reservations FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can create their own reservations" ON public.reservations FOR INSERT WITH CHECK (user_id = auth.uid());
 CREATE POLICY "Users can update their own reservations" ON public.reservations FOR UPDATE USING (user_id = auth.uid());
-CREATE POLICY "Admins can view all reservations" ON public.reservations FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Users can insert any reservation" ON public.reservations FOR INSERT WITH CHECK (true);
 
--- Políticas para materiales (todos pueden ver)
+-- Políticas para materiales
 CREATE POLICY "Anyone can view materials" ON public.materials FOR SELECT USING (true);
-CREATE POLICY "Admins can manage materials" ON public.materials FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Anyone can insert materials" ON public.materials FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update materials" ON public.materials FOR UPDATE USING (true);
 
 -- Políticas para materiales de reservación
-CREATE POLICY "Users can manage materials for their reservations" ON public.reservation_materials FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.reservations WHERE id = reservation_id AND user_id = auth.uid())
-);
-CREATE POLICY "Admins can view all reservation materials" ON public.reservation_materials FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Anyone can view reservation materials" ON public.reservation_materials FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert reservation materials" ON public.reservation_materials FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can delete reservation materials" ON public.reservation_materials FOR DELETE USING (true);
