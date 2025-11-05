@@ -23,7 +23,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [initialized, setInitialized] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -40,33 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await loadUserProfile(session.user)
           }
           setIsLoading(false)
-          setInitialized(true)
         }
       } catch (error) {
         if (isMounted) {
           setIsLoading(false)
-          setInitialized(true)
         }
       }
     }
 
     initializeAuth()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (isMounted) {
-        if (session?.user) {
-          await loadUserProfile(session.user)
-        } else {
-          setUser(null)
-        }
-      }
-    })
-
     return () => {
       isMounted = false
-      subscription?.unsubscribe()
     }
   }, [])
 
@@ -99,7 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: adminEmail,
             password: adminPassword,
           })
-          return !error
+          if (!error) {
+            const {
+              data: { session },
+            } = await supabase.auth.getSession()
+            if (session?.user) {
+              await loadUserProfile(session.user)
+            }
+            return true
+          }
+          return false
         }
         return false
       } else {
@@ -107,7 +100,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: passwordOrEmail,
           password: passwordParam!,
         })
-        return !error
+        if (!error) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+          if (session?.user) {
+            await loadUserProfile(session.user)
+          }
+          return true
+        }
+        return false
       }
     } catch {
       return false
