@@ -17,6 +17,6 @@ ON CONFLICT (email) DO NOTHING;
 --   -H 'Content-Type: application/json' \
 --   -d '{
 --     "email": "admin@taller.edu",
---     "password": "Admin123!@",
+--     "password": "navojoa2026",
 --     "email_confirm": true
 --   }'

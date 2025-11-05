@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (passwordOrEmail: string, passwordParam?: string): Promise<boolean> => {
     setIsLoading(true)
     const isAdminLogin = passwordParam === undefined
-    const adminPassword = "Admin123!@"
+    const adminPassword = "navojoa2026" // Actualizar contraseña del administrador a navojoa2026
     const adminEmail = "admin@taller.edu"
 
     try {
