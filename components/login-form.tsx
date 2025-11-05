@@ -25,21 +25,19 @@ export function LoginForm() {
 
     if (loginType === "admin") {
       if (!password) {
-        setError("Por favor ingrese la contraseña")
         return
       }
       const success = await login(password)
       if (!success) {
-        setError("Contraseña incorrecta")
+        // Fail silenciosamente
       }
     } else {
       if (!email || !password) {
-        setError("Por favor ingrese email y contraseña")
         return
       }
       const success = await login(email, password)
       if (!success) {
-        setError("Email o contraseña incorrectos")
+        // Fail silenciosamente
       }
     }
   }
